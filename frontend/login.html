@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Student Management System</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="card">
+      <h1 class="card-title text-center mb-3">Student Management System</h1>
+      <p class="text-center text-light mb-3">Please login to continue</p>
+
+      <div id="alertContainer"></div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input 
+            type="email" 
+            class="form-input" 
+            id="email" 
+            placeholder="Enter your email"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input 
+            type="password" 
+            class="form-input" 
+            id="password" 
+            placeholder="Enter your password"
+            required
+          >
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          Login
+        </button>
+      </form>
+
+      <p class="text-center mt-3" style="font-size: 0.875rem;">
+        Don't have an account? 
+        <a href="#" id="registerLink" style="color: var(--primary-color); font-weight: 500;">
+          Register here
+        </a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Register Modal -->
+  <div id="registerModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Register New Admin</h2>
+        <button class="modal-close" id="closeModal">&times;</button>
+      </div>
+
+      <form id="registerForm">
+        <div class="form-group">
+          <label class="form-label" for="regUsername">Username</label>
+          <input 
+            type="text" 
+            class="form-input" 
+            id="regUsername" 
+            placeholder="Enter username"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="regEmail">Email</label>
+          <input 
+            type="email" 
+            class="form-input" 
+            id="regEmail" 
+            placeholder="Enter email"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="regPassword">Password</label>
+          <input 
+            type="password" 
+            class="form-input" 
+            id="regPassword" 
+            placeholder="Enter password"
+            required
+          >
+        </div>
+
+        <div class="btn-group">
+          <button type="submit" class="btn btn-primary">Register</button>
+          <button type="button" class="btn btn-secondary" id="cancelRegister">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/login.js"></script>
+</body>
+</html>

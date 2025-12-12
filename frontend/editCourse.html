@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Course - Student Management System</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="dashboard.html" class="navbar-brand">SMS</a>
+      <ul class="navbar-menu">
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="students.html">Students</a></li>
+        <li><a href="courses.html">Courses</a></li>
+        <li><a href="#" id="logoutBtn">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">Edit Course</h1>
+        <a href="courses.html" class="btn btn-secondary">← Back</a>
+      </div>
+
+      <div id="alertContainer"></div>
+
+      <div id="loadingSpinner" class="text-center">
+        <div class="spinner"></div>
+      </div>
+
+      <form id="editCourseForm" class="hidden">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="courseCode">Course Code *</label>
+            <input 
+              type="text" 
+              class="form-input" 
+              id="courseCode" 
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="status">Status</label>
+            <select class="form-select" id="status">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="courseName">Course Name *</label>
+          <input 
+            type="text" 
+            class="form-input" 
+            id="courseName" 
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="description">Description</label>
+          <textarea 
+            class="form-textarea" 
+            id="description"
+          ></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="department">Department *</label>
+            <input 
+              type="text" 
+              class="form-input" 
+              id="department" 
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="credits">Credits *</label>
+            <input 
+              type="number" 
+              class="form-input" 
+              id="credits" 
+              min="1"
+              max="10"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="instructor">Instructor</label>
+            <input 
+              type="text" 
+              class="form-input" 
+              id="instructor"
+            >
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="capacity">Capacity</label>
+            <input 
+              type="number" 
+              class="form-input" 
+              id="capacity" 
+              min="1"
+            >
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="semester">Semester</label>
+            <input 
+              type="text" 
+              class="form-input" 
+              id="semester"
+            >
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="academicYear">Academic Year</label>
+            <input 
+              type="text" 
+              class="form-input" 
+              id="academicYear"
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Schedule</label>
+          <div class="form-row">
+            <div class="form-group">
+              <input 
+                type="text" 
+                class="form-input" 
+                id="scheduleDays" 
+                placeholder="Days (e.g., Mon, Wed, Fri)"
+              >
+            </div>
+            <div class="form-group">
+              <input 
+                type="text" 
+                class="form-input" 
+                id="scheduleTime" 
+                placeholder="Time (e.g., 10:00 AM - 11:30 AM)"
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-3">
+          <h3 class="card-title">Enrolled Students (<span id="enrolledCount">0</span>)</h3>
+          <div id="enrolledStudentsList"></div>
+        </div>
+
+        <div class="btn-group mt-3">
+          <button type="submit" class="btn btn-primary">Update Course</button>
+          <a href="courses.html" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:5000/api';
+    let courseId = null;
+
+    // Check authentication
+    function checkAuth() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = 'login.html';
+        return null;
+      }
+      return token;
+    }
+
+    // Get headers
+    function getHeaders() {
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${checkAuth()}`
+      };
+    }
+
+    // Show alert
+    function showAlert(message, type = 'error') {
+      const alertContainer = document.getElementById('alertContainer');
+      alertContainer.innerHTML = `
+        <div class="alert alert-${type}">
+          ${message}
+        </div>
+      `;
+      setTimeout(() => { alertContainer.innerHTML = ''; }, 5000);
+    }
+
+    // Get course ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    courseId = urlParams.get('id');
+
+    if (!courseId) {
+      window.location.href = 'courses.html';
+    }
+
+    // Fetch course data
+    async function loadCourseData() {
+      try {
+        const response = await fetch(`${API_URL}/courses/${courseId}`, {
+          headers: getHeaders()
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          const course = data.data;
+
+          // Populate form
+          document.getElementById('courseCode').value = course.courseCode;
+          document.getElementById('courseName').value = course.courseName;
+          document.getElementById('description').value = course.description || '';
+          document.getElementById('department').value = course.department;
+          document.getElementById('credits').value = course.credits;
+          document.getElementById('instructor').value = course.instructor || '';
+          document.getElementById('capacity').value = course.capacity;
+          document.getElementById('semester').value = course.semester || '';
+          document.getElementById('academicYear').value = course.academicYear || '';
+          document.getElementById('status').value = course.status;
+
+          // Schedule
+          if (course.schedule) {
+            document.getElementById('scheduleDays').value = 
+              course.schedule.days ? course.schedule.days.join(', ') : '';
+            document.getElementById('scheduleTime').value = course.schedule.time || '';
+          }
+
+          // Display enrolled students
+          displayEnrolledStudents(course.enrolledStudents);
+
+          // Show form
+          document.getElementById('loadingSpinner').classList.add('hidden');
+          document.getElementById('editCourseForm').classList.remove('hidden');
+        } else {
+          showAlert(data.message);
+        }
+      } catch (error) {
+        console.error('Error loading course:', error);
+        showAlert('Error loading course data');
+      }
+    }
+
+    // Display enrolled students
+    function displayEnrolledStudents(students) {
+      document.getElementById('enrolledCount').textContent = students.length;
+      
+      const container = document.getElementById('enrolledStudentsList');
+      
+      if (students.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-light);">No students enrolled yet.</p>';
+        return;
+      }
+
+      container.innerHTML = `
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Class</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${students.map(student => `
+              <tr>
+                <td>${student.studentId}</td>
+                <td>${student.firstName} ${student.lastName}</td>
+                <td>${student.email}</td>
+                <td>${student.class || 'N/A'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    // Form submission
+    document.getElementById('editCourseForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // Parse schedule days
+      const scheduleDaysInput = document.getElementById('scheduleDays').value;
+      const scheduleDays = scheduleDaysInput ? 
+        scheduleDaysInput.split(',').map(day => day.trim()) : [];
+
+      const courseData = {
+        courseCode: document.getElementById('courseCode').value.toUpperCase(),
+        courseName: document.getElementById('courseName').value,
+        description: document.getElementById('description').value,
+        department: document.getElementById('department').value,
+        credits: parseInt(document.getElementById('credits').value),
+        instructor: document.getElementById('instructor').value,
+        capacity: parseInt(document.getElementById('capacity').value),
+        semester: document.getElementById('semester').value,
+        academicYear: document.getElementById('academicYear').value,
+        status: document.getElementById('status').value,
+        schedule: {
+          days: scheduleDays,
+          time: document.getElementById('scheduleTime').value
+        }
+      };
+
+      try {
+        const response = await fetch(`${API_URL}/courses/${courseId}`, {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify(courseData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showAlert('Course updated successfully!', 'success');
+          setTimeout(() => {
+            window.location.href = 'courses.html';
+          }, 1500);
+        } else {
+          showAlert(data.message);
+        }
+      } catch (error) {
+        console.error('Error updating course:', error);
+        showAlert('Error updating course');
+      }
+    });
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = 'login.html';
+    });
+
+    // Initialize
+    loadCourseData();
+  </script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Students - Student Management System</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="dashboard.html" class="navbar-brand">SMS</a>
+      <ul class="navbar-menu">
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="students.html" class="active">Students</a></li>
+        <li><a href="courses.html">Courses</a></li>
+        <li><a href="#" id="logoutBtn">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">Students Management</h1>
+        <a href="addStudent.html" class="btn btn-primary">+ Add Student</a>
+      </div>
+
+      <div id="alertContainer"></div>
+
+      <div class="search-container">
+        <div class="search-bar">
+          <input 
+            type="text" 
+            class="form-input search-input" 
+            id="searchInput"
+            placeholder="Search by name, student ID, or class..."
+          >
+          <select class="form-select" id="classFilter">
+            <option value="">All Classes</option>
+          </select>
+          <select class="form-select" id="statusFilter">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="graduated">Graduated</option>
+          </select>
+          <button class="btn btn-secondary" id="clearFilters">Clear</button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Class</th>
+              <th>Enrolled Courses</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="studentsTable">
+            <tr>
+              <td colspan="8" class="text-center">
+                <div class="spinner"></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Confirm Delete</h2>
+        <button class="modal-close" id="closeDeleteModal">&times;</button>
+      </div>
+      <p>Are you sure you want to delete this student? This action cannot be undone.</p>
+      <div class="btn-group mt-3">
+        <button class="btn btn-danger" id="confirmDelete">Delete</button>
+        <button class="btn btn-secondary" id="cancelDelete">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/students.js"></script>
+</body>
+</html>

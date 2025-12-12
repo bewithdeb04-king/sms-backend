@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Student - Student Management System</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="dashboard.html" class="navbar-brand">SMS</a>
+      <ul class="navbar-menu">
+        <li><a href="dashboard.html">Dashboard</a></li>
+        <li><a href="students.html">Students</a></li>
+        <li><a href="courses.html">Courses</a></li>
+        <li><a href="#" id="logoutBtn">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">Edit Student</h1>
+        <a href="students.html" class="btn btn-secondary">← Back</a>
+      </div>
+
+      <div id="alertContainer"></div>
+
+      <div id="loadingSpinner" class="text-center">
+        <div class="spinner"></div>
+      </div>
+
+      <form id="editStudentForm" class="hidden">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="studentId">Student ID *</label>
+            <input type="text" class="form-input" id="studentId" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="status">Status</label>
+            <select class="form-select" id="status">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="graduated">Graduated</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="firstName">First Name *</label>
+            <input type="text" class="form-input" id="firstName" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="lastName">Last Name *</label>
+            <input type="text" class="form-input" id="lastName" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="email">Email *</label>
+            <input type="email" class="form-input" id="email" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="phone">Phone *</label>
+            <input type="tel" class="form-input" id="phone" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="dateOfBirth">Date of Birth *</label>
+            <input type="date" class="form-input" id="dateOfBirth" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="class">Class *</label>
+            <input type="text" class="form-input" id="class" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="section">Section</label>
+            <input type="text" class="form-input" id="section">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="enrolledCourses">Enrolled Courses</label>
+            <select class="form-select" id="enrolledCourses" multiple style="height: 100px;">
+            </select>
+            <small style="color: var(--text-light);">Hold Ctrl/Cmd to select multiple</small>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Address</label>
+          <div class="form-row">
+            <div class="form-group">
+              <input type="text" class="form-input" id="street" placeholder="Street">
+            </div>
+            <div class="form-group">
+              <input type="text" class="form-input" id="city" placeholder="City">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <input type="text" class="form-input" id="state" placeholder="State">
+            </div>
+            <div class="form-group">
+              <input type="text" class="form-input" id="zipCode" placeholder="Zip Code">
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button type="submit" class="btn btn-primary">Update Student</button>
+          <a href="students.html" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:5000/api';
+    let studentId = null;
+
+    // Check authentication
+    function checkAuth() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = 'login.html';
+        return null;
+      }
+      return token;
+    }
+
+    // Get headers
+    function getHeaders() {
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${checkAuth()}`
+      };
+    }
+
+    // Show alert
+    function showAlert(message, type = 'error') {
+      const alertContainer = document.getElementById('alertContainer');
+      alertContainer.innerHTML = `
+        <div class="alert alert-${type}">
+          ${message}
+        </div>
+      `;
+      setTimeout(() => { alertContainer.innerHTML = ''; }, 5000);
+    }
+
+    // Get student ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    studentId = urlParams.get('id');
+
+    if (!studentId) {
+      window.location.href = 'students.html';
+    }
+
+    // Fetch student and courses
+    async function loadStudentData() {
+      try {
+        const [studentRes, coursesRes] = await Promise.all([
+          fetch(`${API_URL}/students/${studentId}`, { headers: getHeaders() }),
+          fetch(`${API_URL}/courses?status=active`, { headers: getHeaders() })
+        ]);
+
+        const studentData = await studentRes.json();
+        const coursesData = await coursesRes.json();
+
+        if (studentData.success && coursesData.success) {
+          const student = studentData.data;
+          const courses = coursesData.data;
+
+          // Populate form
+          document.getElementById('studentId').value = student.studentId;
+          document.getElementById('firstName').value = student.firstName;
+          document.getElementById('lastName').value = student.lastName;
+          document.getElementById('email').value = student.email;
+          document.getElementById('phone').value = student.phone;
+          document.getElementById('dateOfBirth').value = student.dateOfBirth.split('T')[0];
+          document.getElementById('class').value = student.class;
+          document.getElementById('section').value = student.section || '';
+          document.getElementById('status').value = student.status;
+
+          // Address
+          if (student.address) {
+            document.getElementById('street').value = student.address.street || '';
+            document.getElementById('city').value = student.address.city || '';
+            document.getElementById('state').value = student.address.state || '';
+            document.getElementById('zipCode').value = student.address.zipCode || '';
+          }
+
+          // Populate courses
+          const coursesSelect = document.getElementById('enrolledCourses');
+          coursesSelect.innerHTML = courses.map(course => 
+            `<option value="${course._id}" ${
+              student.enrolledCourses.some(ec => ec._id === course._id) ? 'selected' : ''
+            }>${course.courseCode} - ${course.courseName}</option>`
+          ).join('');
+
+          // Show form
+          document.getElementById('loadingSpinner').classList.add('hidden');
+          document.getElementById('editStudentForm').classList.remove('hidden');
+        }
+      } catch (error) {
+        console.error('Error loading student:', error);
+        showAlert('Error loading student data');
+      }
+    }
+
+    // Form submission
+    document.getElementById('editStudentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const enrolledCoursesSelect = document.getElementById('enrolledCourses');
+      const selectedCourses = Array.from(enrolledCoursesSelect.selectedOptions).map(option => option.value);
+
+      const studentData = {
+        studentId: document.getElementById('studentId').value,
+        firstName: document.getElementById('firstName').value,
+        lastName: document.getElementById('lastName').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        dateOfBirth: document.getElementById('dateOfBirth').value,
+        class: document.getElementById('class').value,
+        section: document.getElementById('section').value,
+        status: document.getElementById('status').value,
+        enrolledCourses: selectedCourses,
+        address: {
+          street: document.getElementById('street').value,
+          city: document.getElementById('city').value,
+          state: document.getElementById('state').value,
+          zipCode: document.getElementById('zipCode').value
+        }
+      };
+
+      try {
+        const response = await fetch(`${API_URL}/students/${studentId}`, {
+          method: 'PUT',
+          headers: getHeaders(),
+          body: JSON.stringify(studentData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showAlert('Student updated successfully!', 'success');
+          setTimeout(() => {
+            window.location.href = 'students.html';
+          }, 1500);
+        } else {
+          showAlert(data.message);
+        }
+      } catch (error) {
+        console.error('Error updating student:', error);
+        showAlert('Error updating student');
+      }
+    });
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = 'login.html';
+    });
+
+    // Initialize
+    loadStudentData();
+  </script>
+</body>
+</html>
